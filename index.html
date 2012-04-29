@@ -3029,8 +3029,8 @@ net.brehaut.ClojureTools = (function (SH) {
   };
 })(SyntaxHighlighter);
 </script><title>ml_class -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">ml_class</h1><h2 class="project-version">0.0.1</h2><br /><p>Clojure implementation of ML Class resources</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr><tr><td class="dep-name">stout</td><td class="dotted"><hr /></td><td class="dep-version">0.1.0</td></tr></table></div><div class="dependencies"><h3>dev dependencies</h3><table><tr><td class="dep-name">lein-marginalia</td><td class="dotted"><hr /></td><td class="dep-version">0.7.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#ml-class.core">ml-class.core</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#ml-class.core" name="ml-class.core"><h1 class="project-name">ml-class.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(ns ml-class.core
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr><tr><td class="dep-name">org.clojure/data.csv</td><td class="dotted"><hr /></td><td class="dep-version">0.1.2</td></tr><tr><td class="dep-name">stout</td><td class="dotted"><hr /></td><td class="dep-version">0.1.0</td></tr></table></div><div class="dependencies"><h3>dev dependencies</h3><table><tr><td class="dep-name">lein-marginalia</td><td class="dotted"><hr /></td><td class="dep-version">0.7.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#ml-class.bayes">ml-class.bayes</a></li><li><a href="#ml-class.clustering">ml-class.clustering</a></li><li><a href="#ml-class.core">ml-class.core</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#ml-class.bayes" name="ml-class.bayes"><h1 class="project-name">ml-class.bayes</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns ml-class.bayes
   (:require [clojure.string :as string]
             [stout.porter-stemmer :as stout]
             [clojure.java.io :as io]))</pre></td></tr><tr><td class="docs">
@@ -3131,13 +3131,104 @@ to trained categories.</p>
   probability [text category]
   (let [cat-prob (category-probability category)
         txt-prob (text-probability text category)]
-    (* txt-prob cat-prob))) </pre></td></tr><tr><td class="docs"><h1>Main</h1>
+    (* txt-prob cat-prob))) </pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#ml-class.clustering" name="ml-class.clustering"><h1 class="project-name">ml-class.clustering</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns ml-class.clustering
+  (:require [clojure.java.io :as io]
+            [clojure.string :as string]
+            [clojure.data.csv :as csv]))</pre></td></tr><tr><td class="docs"><h1>Data Access</h1>
+
+<p>The first section just deals with loading the data from the CSV
+source and presenting it as a nice sequence.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Creates a sequence from the CSV input.  The sequence
+  consists of vectors with two elements [URL TAGS], where the tags
+  are a vector of tag strings.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn 
+  urls-seq []
+  (map 
+    #(vector (first %) 
+             (string/split (second %) #&quot;,&quot;))
+    (csv/read-csv 
+      (io/reader &quot;intro_web_data/links.csv&quot;))))</pre></td></tr><tr><td class="docs"><h1>URL Tags</h1>
+
+<p>Just a handy function for extracting all the distinct tags from
+the CSV.  There is also a memoized version as this is neatly cacheable.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Returns a vector of all distinct tags from the CSV</p>
+</td><td class="codes"><pre class="brush: clojure">(defn 
+  distinct-tags []
+  (-&gt;&gt; (urls-seq)
+       (reduce #(reduce conj %1 (second %2)) [])
+       (distinct)))</pre></td></tr><tr><td class="docs"><p>Memoizes the distinct tags function as this will only
+  change each time we refresh the dataset.</p>
+</td><td class="codes"><pre class="brush: clojure">(def 
+  memo-distinct-tags (memoize distinct-tags))</pre></td></tr><tr><td class="docs"><h1>Distance Calculations</h1>
+
+<p>Here we provide some calculations for finding the distance
+between vectors (based on tag matches for the URL)</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Euclidean distance between two collections considered
+  as coordinates.  Code modified from clojuredocs.org.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn 
+  distance [c1 c2]
+  (-&gt;&gt; (map - c1 c2) 
+       (map #(* % %)) 
+       (reduce +)
+       (Math/sqrt)))</pre></td></tr><tr><td class="docs"><h1>URL Matching</h1>
+
+<p>These functions then use the tags and distance calculations to
+do some matching of URLs, for example providing a function to find
+URL's in the dataset similar to a specified one.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Takes a URL/tag pair and changes it to a pair consisting
+  of the URL and a vector of 1/0 matches for each distinct tag.  This
+  vector of matches can then be used to compute the distance between
+  different URL pairs.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn 
+  url-to-tag-matches [[url url-tags]]
+  (vector url
+    (-&gt;&gt; (memo-distinct-tags)
+         (map #(if (some #{%} url-tags) 1 0)))))</pre></td></tr><tr><td class="docs"><p>Returns URL/coords pairs for the dataset</p>
+</td><td class="codes"><pre class="brush: clojure">(defn 
+  url-data []
+  (-&gt;&gt; (urls-seq)
+       (map url-to-tag-matches)))</pre></td></tr><tr><td class="docs"><p>Take a URL vector and return the total most similar
+  urls in the data-set.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn 
+  urls-like [x total]
+  (-&gt;&gt; (url-data)
+       (map #(vector (first %)
+                     (distance (second x) (second %))))
+       (sort #(&lt; (second %1) (second %2)))
+       (take total)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#ml-class.core" name="ml-class.core"><h1 class="project-name">ml-class.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns ml-class.core
+  (:require [ml-class.bayes :as bayes]
+            [ml-class.clustering :as cl]))</pre></td></tr><tr><td class="docs"><h1>Actions</h1>
+
+<p>This section contains the actions available when running this
+program from Leiningen, for example:</p>
+
+<p>  lein run bayes</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Loads some training data and then runs some simple
+  example text through the classifier, printing the results to the
+  console.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn- 
+  bayes []
+  (bayes/train)
+  (let [text &quot;Dustin Johnson wound up with another bizarre penalty Thursday when his caddie thought his tee time was 40 minutes later than it was, and he raced to the first tee at the Northern Trust Open in Los Angeles to avoid disqualification. Johnson was given a two-shot penalty for not being on the tee box at his starting time. Players then have five minutes&quot;]
+    (println &quot;Arts: &quot; (bayes/probability text &quot;arts&quot;))
+    (println &quot;Sports: &quot; (bayes/probability text &quot;sports&quot;))))</pre></td></tr><tr><td class="docs"><p>Uses URL's with associated tags and clusters them into
+  similar groups. Picks the 10th URL from the data, and then prints
+  the 10 most similar URLs based on tag matching.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn- 
+  cluster []
+  (let [url (nth (cl/url-data) 10)]
+    (println (cl/urls-like url 10))))</pre></td></tr><tr><td class="docs"><p>Prints a usage message</p>
+</td><td class="codes"><pre class="brush: clojure">(defn- 
+  usage []
+  (println &quot;Usage: lein run (bayes)&quot;))</pre></td></tr><tr><td class="docs"><h1>Main</h1>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>If you're running this through Leiningen then by default it
   just loads the training data and then prints the scores for some matches.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn 
-  -main []
-  (train)
-  (let [text &quot;Dustin Johnson wound up with another bizarre penalty Thursday when his caddie thought his tee time was 40 minutes later than it was, and he raced to the first tee at the Northern Trust Open in Los Angeles to avoid disqualification. Johnson was given a two-shot penalty for not being on the tee box at his starting time. Players then have five minutes&quot;]
-    (println &quot;Arts: &quot; (probability text &quot;arts&quot;))
-    (println &quot;Sports: &quot; (probability text &quot;sports&quot;))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
+  -main [action]
+  (condp = action
+    &quot;bayes&quot; (bayes)
+    &quot;cluster&quot; (cluster)
+    (usage)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
        SyntaxHighlighter.all()</script></body></html>
