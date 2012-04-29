@@ -95,14 +95,15 @@
         feat-total (->> (keys @*category-count*)
                         (map #(feature-count % feature))
                         (reduce + 0))]
-    (/ (+ (* weight ap)
-          (* feat-total basic-prob))
-       (+ weight feat-total))))
+    (* acc
+       (/ (+ (* weight ap)
+             (* feat-total basic-prob))
+          (+ weight feat-total)))))
 
 (defn- ^{:doc "Returns weighted probability results for all the features
   in a piece of text."}
   text-probability [text category]
-  (reduce (partial weighted-probability category) 0 (features text)))
+  (reduce (partial weighted-probability category) 1 (features text)))
 
 (defn- ^{:doc "Calculates the probability for a category match based
   on how much training data it has compared to other categories."}
@@ -118,13 +119,12 @@
     (* txt-prob cat-prob))) 
 
 ;; # Main
-;;
-;; If you're running this through Leiningen then by default it
-;; just loads the training data and then prints the scores for
-;; some matches.
 
-(defn -main []
+(defn ^{:doc "If you're running this through Leiningen then by default it
+  just loads the training data and then prints the scores for some matches."}
+  -main []
   (train)
-  (println "Arts: " (probability "Early Friday afternoon, the lead negotiators for the N.B.A. and the players union will hold a bargaining session in Beverly Hills — the latest attempt to break a 12-month stalemate on a new labor deal." "arts"))
-  (println "Sports: " (probability "Early Friday afternoon, the lead negotiators for the N.B.A. and the players union will hold a bargaining session in Beverly Hills — the latest attempt to break a 12-month stalemate on a new labor deal." "sports")))
+  (let [text "Dustin Johnson wound up with another bizarre penalty Thursday when his caddie thought his tee time was 40 minutes later than it was, and he raced to the first tee at the Northern Trust Open in Los Angeles to avoid disqualification. Johnson was given a two-shot penalty for not being on the tee box at his starting time. Players then have five minutes"]
+    (println "Arts: " (probability text "arts"))
+    (println "Sports: " (probability text "sports"))))
 
