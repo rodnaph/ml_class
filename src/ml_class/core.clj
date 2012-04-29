@@ -7,7 +7,7 @@
 (def ^:dynamic *feature-count* (ref {}))
 (def ^:dynamic *category-count* (ref {}))
 
-;; Text handling
+;; # Text handling
 ;;
 ;; Here we handle the process of taking some text and breaking it
 ;; apart into only the features that we think will be useful in
@@ -32,7 +32,7 @@
        (filter good-word-length)
        (map stout/porter-stemmer)))
 
-;; Training
+;; # Training
 ;;
 ;; The training function handle consuming text data and using it to
 ;; score against categories so we can later use that to do matching
@@ -62,7 +62,7 @@
     (doseq [line (line-seq (io/reader (str "intro_web_data/" category)))]
       (train-category category line))))
 
-;; Classification
+;; # Classification
 ;;
 ;; When the system has been trained with some data we can then use
 ;; those scores to apply the Naive Bayes algorithm for matching text
@@ -117,7 +117,7 @@
         txt-prob (text-probability text category)]
     (* txt-prob cat-prob))) 
 
-;; Main
+;; # Main
 ;;
 ;; If you're running this through Leiningen then by default it
 ;; just loads the training data and then prints the scores for
