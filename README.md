@@ -20,3 +20,20 @@ Or to interact with the example from the REPL:
 (bayes/probability "Some sentence about sports" "sports")
 ```
 
+# Clustering
+
+To try finding similar URLs...
+
+```clojure
+(require '[ml-class.clustering :as cl])
+" Pick a URL from the data
+(def url (nth (cl/url-data) 10))
+(cl/urls-like url 10)
+```
+
+Or the example from Leiningen:
+
+```bash
+lein run cluster
+```
+

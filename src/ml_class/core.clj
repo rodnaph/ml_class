@@ -1,7 +1,7 @@
 
 (ns ml-class.core
   (:require [ml-class.bayes :as bayes]
-            [ml-class.clustering :as cluster]))
+            [ml-class.clustering :as cl]))
 
 ;; # Actions
 ;;
@@ -20,9 +20,11 @@
     (println "Sports: " (bayes/probability text "sports"))))
 
 (defn- ^{:doc "Uses URL's with associated tags and clusters them into
-  similar groups."}
+  similar groups. Picks the 10th URL from the data, and then prints
+  the 10 most similar URLs based on tag matching."}
   cluster []
-  )
+  (let [url (nth (cl/url-data) 10)]
+    (println (cl/urls-like url 10))))
 
 (defn- ^{:doc "Prints a usage message"}
   usage []
