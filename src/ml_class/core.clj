@@ -1,6 +1,7 @@
 
 (ns ml-class.core
-  (:require [ml-class.bayes :as bayes]))
+  (:require [ml-class.bayes :as bayes]
+            [ml-class.clustering :as cluster]))
 
 ;; # Actions
 ;;
@@ -18,6 +19,11 @@
     (println "Arts: " (bayes/probability text "arts"))
     (println "Sports: " (bayes/probability text "sports"))))
 
+(defn- ^{:doc "Uses URL's with associated tags and clusters them into
+  similar groups."}
+  cluster []
+  )
+
 (defn- ^{:doc "Prints a usage message"}
   usage []
   (println "Usage: lein run (bayes)"))
@@ -29,5 +35,6 @@
   -main [action]
   (condp = action
     "bayes" (bayes)
+    "cluster" (cluster)
     (usage)))
 
