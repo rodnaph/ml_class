@@ -3035,7 +3035,7 @@ net.brehaut.ClojureTools = (function (SH) {
             [stout.porter-stemmer :as stout]
             [clojure.java.io :as io]))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def ^:dynamic *feature-count* (ref {}))
-(def ^:dynamic *category-count* (ref {}))</pre></td></tr><tr><td class="docs"><p>Text handling</p>
+(def ^:dynamic *category-count* (ref {}))</pre></td></tr><tr><td class="docs"><h1>Text handling</h1>
 
 <p>Here we handle the process of taking some text and breaking it
 apart into only the features that we think will be useful in
@@ -3057,7 +3057,7 @@ the text, remove punctuation, etc...</p>
        (map #(.toLowerCase %))
        (map #(string/replace % #&quot;[^A-Za-z0-9]&quot; &quot;&quot;))
        (filter good-word-length)
-       (map stout/porter-stemmer)))</pre></td></tr><tr><td class="docs"><p>Training</p>
+       (map stout/porter-stemmer)))</pre></td></tr><tr><td class="docs"><h1>Training</h1>
 
 <p>The training function handle consuming text data and using it to
 score against categories so we can later use that to do matching
@@ -3083,7 +3083,7 @@ for text against those same categories.</p>
   train []
   (doseq [category [&quot;arts&quot; &quot;sports&quot;]]
     (doseq [line (line-seq (io/reader (str &quot;intro_web_data/&quot; category)))]
-      (train-category category line))))</pre></td></tr><tr><td class="docs"><p>Classification</p>
+      (train-category category line))))</pre></td></tr><tr><td class="docs"><h1>Classification</h1>
 
 <p>When the system has been trained with some data we can then use
 those scores to apply the Naive Bayes algorithm for matching text
@@ -3130,7 +3130,7 @@ to trained categories.</p>
   probability [text category]
   (let [cat-prob (category-probability category)
         txt-prob (text-probability text category)]
-    (* txt-prob cat-prob))) </pre></td></tr><tr><td class="docs"><p>Main</p>
+    (* txt-prob cat-prob))) </pre></td></tr><tr><td class="docs"><h1>Main</h1>
 
 <p>If you're running this through Leiningen then by default it
 just loads the training data and then prints the scores for
